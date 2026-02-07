@@ -192,9 +192,6 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-zinc-50 to-white">
-      <div style={{ padding: 12, background: "yellow", color: "black" }}>
-  DEPLOY CHECK 123
-</div>
       <div className="mx-auto max-w-3xl px-4 py-10">
         {/* ヘッダー */}
         <div className="mb-6 rounded-2xl border bg-white p-6 shadow-sm">
