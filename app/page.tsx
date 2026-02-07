@@ -1,7 +1,6 @@
-
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 // ✅ route.ts（細分類版）に合わせる
 type JobKey =
@@ -17,23 +16,52 @@ type JobKey =
   | "OFFICE_GENERAL"
   | "OFFICE_SALES_ASSIST"
   | "MANUFACTURING_LINE"
+  | "PROF_MED_DOCTOR"
+  | "PROF_MED_NURSE"
+  | "PROF_MED_CARE"
+  | "PROF_LAWYER"
+  | "PROF_TAX"
+  | "PROF_ACCOUNTING"
+  | "HR_RECRUITER"
+  | "HR_GENERALIST"
+  | "MARKETER"
+  | "ACCOUNTING"
+  | "FINANCE"
+  | "PRODUCT_MANAGER"
+  | "DESIGNER"
+  | "CREATIVE"
+  | "MANAGEMENT"
   | "OTHER";
 
+// ※ route.ts 側が string で受けてるならここは自由に増やせる
 type IndustryKey =
-  | "HR"
-  | "IT"
-  | "RETAIL"
-  | "LOGISTICS"
-  | "FINANCE"
-  | "MANUFACTURING"
-  | "SERVICE"
+  | "IT_SAAS_B2B"
+  | "IT_WEB_B2C"
+  | "IT_SES"
+  | "IT_SI"
+  | "HR_AGENCY"
+  | "HR_MEDIA"
+  | "LOGI_3PL"
+  | "LOGI_LASTMILE"
+  | "RETAIL_CHAIN"
+  | "RETAIL_LUXURY"
+  | "FIN_BANK"
+  | "FIN_INSURANCE"
+  | "FIN_SECURITIES"
+  | "MANUFACTURING_FACTORY"
+  | "MANUFACTURING_ELECTRONICS"
+  | "SERVICE_FOOD"
+  | "SERVICE_HOTEL"
+  | "MEDICAL_HOSPITAL"
+  | "MEDICAL_CLINIC"
+  | "PUBLIC_GOV"
+  | "EDU_SCHOOL"
+  | "CONSTRUCTION"
+  | "REAL_ESTATE"
   | "OTHER";
 
 type TenureKey = "LT_6M" | "M6_TO_1Y" | "Y1_TO_3Y" | "Y3_TO_5Y" | "GE_5Y";
 
-const TIMEREX_URL = "https://timerex.net/s/info_2b5b_c8f1/468b156b";
-
-// ✅ UI
 const AGE_OPTIONS = Array.from({ length: 43 }, (_, i) => String(18 + i)); // 18〜60
 const INCOME_OPTIONS = Array.from({ length: 81 }, (_, i) => String(200 + i * 10)); // 200〜1000（10万刻み）
 
@@ -56,6 +84,18 @@ const JOB_GROUPS: { group: string; options: { label: string; value: JobKey }[] }
     ],
   },
   {
+    group: "バックオフィス / 企画",
+    options: [
+      { label: "採用（人事）", value: "HR_RECRUITER" },
+      { label: "人事（制度/労務など）", value: "HR_GENERALIST" },
+      { label: "マーケター", value: "MARKETER" },
+      { label: "経理", value: "ACCOUNTING" },
+      { label: "財務/金融", value: "FINANCE" },
+      { label: "PM/PdM", value: "PRODUCT_MANAGER" },
+      { label: "経営/マネジメント", value: "MANAGEMENT" },
+    ],
+  },
+  {
     group: "販売・サービス",
     options: [
       { label: "小売（販売/接客）", value: "SERVICE_RETAIL" },
@@ -69,18 +109,73 @@ const JOB_GROUPS: { group: string; options: { label: string; value: JobKey }[] }
       { label: "営業事務", value: "OFFICE_SALES_ASSIST" },
     ],
   },
-  { group: "製造", options: [{ label: "製造（ライン）", value: "MANUFACTURING_LINE" }] },
-  { group: "その他", options: [{ label: "その他", value: "OTHER" }] },
+  {
+    group: "製造",
+    options: [{ label: "製造（ライン）", value: "MANUFACTURING_LINE" }],
+  },
+  {
+    group: "医療・介護",
+    options: [
+      { label: "医師", value: "PROF_MED_DOCTOR" },
+      { label: "看護師", value: "PROF_MED_NURSE" },
+      { label: "介護職", value: "PROF_MED_CARE" },
+    ],
+  },
+  {
+    group: "士業",
+    options: [
+      { label: "弁護士", value: "PROF_LAWYER" },
+      { label: "税理士", value: "PROF_TAX" },
+      { label: "公認会計士", value: "PROF_ACCOUNTING" },
+    ],
+  },
+  {
+    group: "クリエイティブ",
+    options: [
+      { label: "デザイナー", value: "DESIGNER" },
+      { label: "クリエイティブ（制作）", value: "CREATIVE" },
+    ],
+  },
+  {
+    group: "その他",
+    options: [{ label: "その他", value: "OTHER" }],
+  },
 ];
 
 const INDUSTRY_OPTIONS: { label: string; value: IndustryKey }[] = [
-  { label: "IT/インターネット", value: "IT" },
-  { label: "人材（紹介/派遣/HR）", value: "HR" },
-  { label: "金融（銀行/証券/保険）", value: "FINANCE" },
-  { label: "物流（倉庫/配送/3PL）", value: "LOGISTICS" },
-  { label: "小売（店舗/EC）", value: "RETAIL" },
-  { label: "メーカー/製造業", value: "MANUFACTURING" },
-  { label: "サービス（宿泊/飲食/その他）", value: "SERVICE" },
+  { label: "SaaS（BtoB）", value: "IT_SAAS_B2B" },
+  { label: "Webサービス（BtoC）", value: "IT_WEB_B2C" },
+  { label: "SES", value: "IT_SES" },
+  { label: "SIer", value: "IT_SI" },
+
+  { label: "人材紹介", value: "HR_AGENCY" },
+  { label: "求人メディア", value: "HR_MEDIA" },
+
+  { label: "物流（3PL）", value: "LOGI_3PL" },
+  { label: "物流（ラストマイル）", value: "LOGI_LASTMILE" },
+
+  { label: "小売チェーン", value: "RETAIL_CHAIN" },
+  { label: "ラグジュアリー/百貨店", value: "RETAIL_LUXURY" },
+
+  { label: "銀行", value: "FIN_BANK" },
+  { label: "保険", value: "FIN_INSURANCE" },
+  { label: "証券", value: "FIN_SECURITIES" },
+
+  { label: "メーカー工場", value: "MANUFACTURING_FACTORY" },
+  { label: "メーカー（電機/精密）", value: "MANUFACTURING_ELECTRONICS" },
+
+  { label: "飲食サービス", value: "SERVICE_FOOD" },
+  { label: "ホテル/観光", value: "SERVICE_HOTEL" },
+
+  { label: "医療（病院）", value: "MEDICAL_HOSPITAL" },
+  { label: "医療（クリニック）", value: "MEDICAL_CLINIC" },
+
+  { label: "官公庁/自治体", value: "PUBLIC_GOV" },
+  { label: "教育（学校）", value: "EDU_SCHOOL" },
+
+  { label: "建設", value: "CONSTRUCTION" },
+  { label: "不動産", value: "REAL_ESTATE" },
+
   { label: "その他", value: "OTHER" },
 ];
 
@@ -106,68 +201,43 @@ function labelTenure(t: TenureKey) {
   return TENURE_OPTIONS.find((o) => o.value === t)?.label ?? "";
 }
 
-// ✅ “毎回空白で始める”ための初期値
-const DEFAULTS = {
-  age: "",
-  currentIncomeMan: "",
-  jobKey: "SALES_FIELD" as JobKey,
-  industryKey: "IT" as IndustryKey,
-  tenureKey: "Y1_TO_3Y" as TenureKey,
-};
-
 export default function Home() {
-  const [age, setAge] = useState(DEFAULTS.age);
-  const [currentIncomeMan, setCurrentIncomeMan] = useState(DEFAULTS.currentIncomeMan);
-  const [jobKey, setJobKey] = useState<JobKey>(DEFAULTS.jobKey);
-  const [industryKey, setIndustryKey] = useState<IndustryKey>(DEFAULTS.industryKey);
-  const [tenureKey, setTenureKey] = useState<TenureKey>(DEFAULTS.tenureKey);
+  // ✅ 初期値は空にしてスタート（インスタ導線向け）
+  const [age, setAge] = useState("");
+  const [currentIncomeMan, setCurrentIncomeMan] = useState("");
+  const [jobKey, setJobKey] = useState<JobKey | "">("");
+  const [industryKey, setIndustryKey] = useState<IndustryKey | "">("");
+  const [tenureKey, setTenureKey] = useState<TenureKey | "">("");
 
   const [message, setMessage] = useState("");
   const [result, setResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
-  // ✅ ここがポイント：保存された入力が残っても、ページ表示時に必ず“初期化”
-  useEffect(() => {
-    // もし以前 localStorage を使ってた場合に備えて、念のため消す（キー名が違うならここ変更）
-    try {
-      localStorage.removeItem("income-diagnosis");
-    } catch {}
-    // 入力を初期値へ
-    setAge(DEFAULTS.age);
-    setCurrentIncomeMan(DEFAULTS.currentIncomeMan);
-    setJobKey(DEFAULTS.jobKey);
-    setIndustryKey(DEFAULTS.industryKey);
-    setTenureKey(DEFAULTS.tenureKey);
-    setResult(null);
-    setMessage("");
-  }, []);
-
   const payload = useMemo(
     () => ({
-      age: age ? Number(age) : null,
-      currentIncomeMan: currentIncomeMan ? Number(currentIncomeMan) : null,
+      age: Number(age || 0),
+      currentIncomeMan: Number(currentIncomeMan || 0),
       jobKey,
       industryKey,
-      tenureYears: tenureKey, // route.ts側で拾う想定
-      // 互換用
+      tenureYears: tenureKey, // route.ts 側が拾えるキー
+      // 互換用（残してOK）
       job: labelJob(jobKey),
       industry: labelIndustry(industryKey),
     }),
     [age, currentIncomeMan, jobKey, industryKey, tenureKey]
   );
 
-  const canSubmit =
-    !!age && !!currentIncomeMan && Number.isFinite(Number(age)) && Number.isFinite(Number(currentIncomeMan));
-
   const submit = async () => {
-    if (!canSubmit) {
-      setMessage("年齢と現年収を入力してください（プルダウンでOK）");
-      return;
-    }
-
     setLoading(true);
     setMessage("");
     setResult(null);
+
+    // 最低限バリデーション
+    if (!age || !currentIncomeMan || !jobKey || !industryKey || !tenureKey) {
+      setLoading(false);
+      setMessage("年齢と年収を選択してください。");
+      return;
+    }
 
     try {
       const res = await fetch("/api/diagnose", {
@@ -180,8 +250,8 @@ export default function Home() {
       if (!res.ok || json?.ok === false) {
         setMessage("診断エラー：" + (json?.saveError ?? json?.error ?? "不明なエラー"));
       } else {
+        setMessage("診断しました！");
         setResult(json);
-        setMessage("");
       }
     } catch (e: any) {
       setMessage("通信エラー：" + (e?.message ?? "不明なエラー"));
@@ -191,194 +261,138 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-zinc-50 to-white">
-      <div className="mx-auto max-w-3xl px-4 py-10">
+    <main className="min-h-screen bg-white text-zinc-900">
+      <div className="mx-auto max-w-3xl px-4 py-10 space-y-6">
         {/* ヘッダー */}
-        <div className="mb-6 rounded-2xl border bg-white p-6 shadow-sm">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="inline-flex items-center gap-2 rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-700">
-                無料・30秒
-              </p>
-              <h1 className="mt-3 text-2xl font-bold tracking-tight text-zinc-900">
-                次の転職で狙える年収レンジ診断
-              </h1>
-              <p className="mt-2 text-sm text-zinc-600">
-                在籍年数・職種・業界から「現実的に狙える年収レンジ」と「次に付ける職種」を提示します。
-              </p>
-            </div>
-
-            <a
-              href={TIMEREX_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hidden shrink-0 rounded-xl bg-black px-4 py-2 text-sm font-medium text-white shadow-sm hover:opacity-90 md:inline-flex"
-            >
-              無料面談を予約
-            </a>
-          </div>
-
-          <div className="mt-4 rounded-xl bg-zinc-50 p-4 text-xs text-zinc-600">
-            ※診断は目安です。最終的な年収は「実績の言語化」「職種の寄せ方」「企業選び（評価制度）」で変わります。
-          </div>
+        <div className="rounded-2xl border bg-white p-6 shadow-sm">
+          <h1 className="text-2xl font-bold tracking-tight">年収診断</h1>
+          <p className="mt-2 text-sm text-zinc-600">
+            年齢・年収・職種・業界・在籍年数から「次の転職で狙える現実的レンジ」を返します。
+          </p>
         </div>
 
-        {/* フォーム */}
-        <div className="rounded-2xl border bg-white p-6 shadow-sm">
-          <h2 className="text-base font-semibold text-zinc-900">入力（全てプルダウン）</h2>
-
-          <div className="mt-4 grid gap-4 md:grid-cols-2">
-            <Field label="年齢">
-              <select className="w-full rounded-xl border px-3 py-2" value={age} onChange={(e) => setAge(e.target.value)}>
+        {/* 入力 */}
+        <div className="rounded-2xl border bg-white p-6 shadow-sm space-y-4">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div>
+              <label className="text-sm font-medium">年齢</label>
+              <select className="mt-1 w-full rounded-lg border p-2" value={age} onChange={(e) => setAge(e.target.value)}>
                 <option value="">選択してください</option>
                 {AGE_OPTIONS.map((v) => (
                   <option key={v} value={v}>
-                    {v}歳
+                    {v}
                   </option>
                 ))}
               </select>
-            </Field>
+            </div>
 
-            <Field label="現年収（万円）">
+            <div>
+              <label className="text-sm font-medium">現年収（万円）</label>
               <select
-                className="w-full rounded-xl border px-3 py-2"
+                className="mt-1 w-full rounded-lg border p-2"
                 value={currentIncomeMan}
                 onChange={(e) => setCurrentIncomeMan(e.target.value)}
               >
                 <option value="">選択してください</option>
                 {INCOME_OPTIONS.map((v) => (
                   <option key={v} value={v}>
-                    {v}万円
+                    {v}
                   </option>
                 ))}
               </select>
-            </Field>
-
-            <Field label="職種">
-              <select
-                className="w-full rounded-xl border px-3 py-2"
-                value={jobKey}
-                onChange={(e) => setJobKey(e.target.value as JobKey)}
-              >
-                {JOB_GROUPS.map((g) => (
-                  <optgroup key={g.group} label={g.group}>
-                    {g.options.map((o) => (
-                      <option key={o.value} value={o.value}>
-                        {o.label}
-                      </option>
-                    ))}
-                  </optgroup>
-                ))}
-              </select>
-            </Field>
-
-            <Field label="業界">
-              <select
-                className="w-full rounded-xl border px-3 py-2"
-                value={industryKey}
-                onChange={(e) => setIndustryKey(e.target.value as IndustryKey)}
-              >
-                {INDUSTRY_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>
-                    {o.label}
-                  </option>
-                ))}
-              </select>
-            </Field>
-
-            <Field label="在籍年数">
-              <select
-                className="w-full rounded-xl border px-3 py-2"
-                value={tenureKey}
-                onChange={(e) => setTenureKey(e.target.value as TenureKey)}
-              >
-                {TENURE_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>
-                    {o.label}
-                  </option>
-                ))}
-              </select>
-            </Field>
-
-            <div className="flex items-end">
-              <button
-                onClick={submit}
-                disabled={loading || !canSubmit}
-                className="w-full rounded-xl bg-black px-4 py-3 text-sm font-semibold text-white shadow-sm disabled:opacity-50"
-              >
-                {loading ? "診断中..." : "診断する"}
-              </button>
             </div>
           </div>
 
-          {message && <p className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">{message}</p>}
+          <div>
+            <label className="text-sm font-medium">職種</label>
+            <select className="mt-1 w-full rounded-lg border p-2" value={jobKey} onChange={(e) => setJobKey(e.target.value as any)}>
+              <option value="">選択してください</option>
+             {JOB_GROUPS.map((g) => (
+              <optgroup key={g.group} label={g.group}>
+               {g.options.map((o) => (
+                 <option key={o.value} value={o.value}>
+                   {o.label}
+                 </option>
+               ))}
+             </optgroup>
+          ))}
+        </select>
+
+          </div>
+
+          <div>
+            <label className="text-sm font-medium">業界</label>
+            <select className="mt-1 w-full rounded-lg border p-2" value={industryKey} onChange={(e) => setIndustryKey(e.target.value as any)}>
+              <option value="">選択してください</option>
+              {INDUSTRY_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="text-sm font-medium">在籍年数</label>
+            <select className="mt-1 w-full rounded-lg border p-2" value={tenureKey} onChange={(e) => setTenureKey(e.target.value as any)}>
+              <option value="">選択してください</option>
+              {TENURE_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+
+          </div>
+
+          <button onClick={submit} disabled={loading} className="w-full rounded-xl bg-black px-4 py-3 text-white disabled:opacity-60">
+            {loading ? "診断中..." : "診断する"}
+          </button>
+
+          {message && <p className="text-sm">{message}</p>}
         </div>
 
         {/* 結果 */}
         {result && (
-          <div className="mt-6 rounded-2xl border bg-white p-6 shadow-sm">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <h2 className="text-base font-semibold text-zinc-900">診断結果</h2>
-              <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-700">
-                入力：{labelJob(jobKey)} / {labelIndustry(industryKey)} / {labelTenure(tenureKey)}
-              </span>
-            </div>
+          <div className="rounded-2xl border bg-white p-6 shadow-sm space-y-3">
+            <h2 className="text-lg font-bold">診断結果</h2>
 
             {result.incomeRangeMan && (
-              <div className="mt-4 rounded-2xl border bg-zinc-50 p-5">
-                <p className="text-sm text-zinc-600">想定レンジ</p>
-                <p className="mt-1 text-2xl font-bold text-zinc-900">
-                  {result.incomeRangeMan.min}〜{result.incomeRangeMan.max}万円
-                </p>
-              </div>
+              <p className="text-base">
+                想定レンジ：<span className="font-bold">{result.incomeRangeMan.min}</span>〜
+                <span className="font-bold">{result.incomeRangeMan.max}</span> 万円
+              </p>
             )}
 
-            {result.reasoning && <p className="mt-4 text-sm leading-6 text-zinc-700">{result.reasoning}</p>}
+            <p className="text-sm text-zinc-600">
+              入力：{labelJob(jobKey)} / {labelIndustry(industryKey)} / {labelTenure(tenureKey)}
+            </p>
+
+            {result.reasoning && <p className="text-sm">{result.reasoning}</p>}
 
             {Array.isArray(result.recommendedRoles) && result.recommendedRoles.length > 0 && (
-              <div className="mt-4">
-                <p className="text-sm font-semibold text-zinc-900">次に付ける候補</p>
-                <ul className="mt-2 grid gap-2 md:grid-cols-2">
+              <div>
+                <p className="text-sm font-bold">次に付ける（おすすめ）</p>
+                <ul className="mt-2 list-disc pl-6 text-sm">
                   {result.recommendedRoles.map((r: string) => (
-                    <li key={r} className="rounded-xl border bg-white px-4 py-3 text-sm text-zinc-800">
-                      {r}
-                    </li>
+                    <li key={r}>{r}</li>
                   ))}
                 </ul>
               </div>
             )}
 
-            <div className="mt-6 rounded-2xl border bg-white p-5">
-              <p className="text-sm font-semibold text-zinc-900">次の一手（面談で具体化できます）</p>
-              <p className="mt-2 text-sm text-zinc-700">
-                「短期離職に見えない見せ方」「職種の寄せ方」「狙うべき企業タイプ」まで、あなたの入力に合わせて具体化します。
-              </p>
-              <a
-                href={TIMEREX_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-4 inline-flex w-full items-center justify-center rounded-xl bg-black px-4 py-3 text-sm font-semibold text-white shadow-sm hover:opacity-90"
-              >
-                無料面談を予約する
-              </a>
-              <p className="mt-2 text-center text-xs text-zinc-500">所要30分・オンライン</p>
-            </div>
+            {/* 予約導線（あなたのTimerex） */}
+            <a
+              href="https://timerex.net/s/info_2b5b_c8f1/468b156b"
+              target="_blank"
+              rel="noreferrer"
+              className="mt-2 inline-flex w-full items-center justify-center rounded-xl border bg-white px-4 py-3 text-sm font-semibold"
+            >
+              無料で相談する（面談予約）
+            </a>
           </div>
         )}
-
-        <footer className="mt-10 text-center text-xs text-zinc-500">
-          © UP-STREAM / Income Diagnosis
-        </footer>
       </div>
     </main>
-  );
-}
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <label className="block">
-      <span className="mb-1 block text-xs font-medium text-zinc-700">{label}</span>
-      {children}
-    </label>
   );
 }
