@@ -33,7 +33,6 @@ type JobKey =
   | "MANAGEMENT"
   | "OTHER";
 
-// ※ route.ts 側が string で受けてるならここは自由に増やせる
 type IndustryKey =
   | "IT_SAAS_B2B"
   | "IT_WEB_B2C"
@@ -187,24 +186,28 @@ const TENURE_OPTIONS: { label: string; value: TenureKey }[] = [
   { label: "5年以上", value: "GE_5Y" },
 ];
 
-function labelJob(jobKey: JobKey) {
+function labelJob(jobKey: JobKey | "") {
+  if (!jobKey) return "";
   for (const g of JOB_GROUPS) {
     const hit = g.options.find((o) => o.value === jobKey);
     if (hit) return hit.label;
   }
   return "その他";
 }
-function labelIndustry(ind: IndustryKey) {
+function labelIndustry(ind: IndustryKey | "") {
+  if (!ind) return "";
   return INDUSTRY_OPTIONS.find((o) => o.value === ind)?.label ?? "その他";
 }
-function labelTenure(t: TenureKey) {
+function labelTenure(t: TenureKey | "") {
+  if (!t) return "";
   return TENURE_OPTIONS.find((o) => o.value === t)?.label ?? "";
 }
 
 export default function Home() {
-  // ✅ 初期値は空にしてスタート（インスタ導線向け）
+  // ✅ 全部「未選択」スタート
   const [age, setAge] = useState("");
   const [currentIncomeMan, setCurrentIncomeMan] = useState("");
+
   const [jobKey, setJobKey] = useState<JobKey | "">("");
   const [industryKey, setIndustryKey] = useState<IndustryKey | "">("");
   const [tenureKey, setTenureKey] = useState<TenureKey | "">("");
@@ -217,9 +220,9 @@ export default function Home() {
     () => ({
       age: Number(age || 0),
       currentIncomeMan: Number(currentIncomeMan || 0),
-      jobKey,
-      industryKey,
-      tenureYears: tenureKey, // route.ts 側が拾えるキー
+      jobKey: String(jobKey || "OTHER"),
+      industryKey: String(industryKey || "OTHER"),
+      tenureYears: String(tenureKey || "LT_6M"),
       // 互換用（残してOK）
       job: labelJob(jobKey),
       industry: labelIndustry(industryKey),
@@ -232,10 +235,9 @@ export default function Home() {
     setMessage("");
     setResult(null);
 
-    // 最低限バリデーション
     if (!age || !currentIncomeMan || !jobKey || !industryKey || !tenureKey) {
       setLoading(false);
-      setMessage("年齢と年収を選択してください。");
+      setMessage("すべて選択してください。");
       return;
     }
 
@@ -288,11 +290,7 @@ export default function Home() {
 
             <div>
               <label className="text-sm font-medium">現年収（万円）</label>
-              <select
-                className="mt-1 w-full rounded-lg border p-2"
-                value={currentIncomeMan}
-                onChange={(e) => setCurrentIncomeMan(e.target.value)}
-              >
+              <select className="mt-1 w-full rounded-lg border p-2" value={currentIncomeMan} onChange={(e) => setCurrentIncomeMan(e.target.value)}>
                 <option value="">選択してください</option>
                 {INCOME_OPTIONS.map((v) => (
                   <option key={v} value={v}>
@@ -307,17 +305,16 @@ export default function Home() {
             <label className="text-sm font-medium">職種</label>
             <select className="mt-1 w-full rounded-lg border p-2" value={jobKey} onChange={(e) => setJobKey(e.target.value as any)}>
               <option value="">選択してください</option>
-             {JOB_GROUPS.map((g) => (
-              <optgroup key={g.group} label={g.group}>
-               {g.options.map((o) => (
-                 <option key={o.value} value={o.value}>
-                   {o.label}
-                 </option>
-               ))}
-             </optgroup>
-          ))}
-        </select>
-
+              {JOB_GROUPS.map((g) => (
+                <optgroup key={g.group} label={g.group}>
+                  {g.options.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
           </div>
 
           <div>
@@ -342,7 +339,6 @@ export default function Home() {
                 </option>
               ))}
             </select>
-
           </div>
 
           <button onClick={submit} disabled={loading} className="w-full rounded-xl bg-black px-4 py-3 text-white disabled:opacity-60">
@@ -381,7 +377,6 @@ export default function Home() {
               </div>
             )}
 
-            {/* 予約導線（あなたのTimerex） */}
             <a
               href="https://timerex.net/s/info_2b5b_c8f1/468b156b"
               target="_blank"
