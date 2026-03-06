@@ -728,77 +728,93 @@ function recommendRoles(jobKey: JobKey): string[] {
 }
 
 export async function POST(req: Request) {
-  const body = await req.json();
+  try {
+    const body = await req.json();
 
-  const age = Number(body.age);
-  const currentIncomeMan = Number(body.currentIncomeMan);
+    const age = Number(body.age);
+    const currentIncomeMan = Number(body.currentIncomeMan);
 
-  const jobKey = String(body.jobKey ?? "OTHER") as JobKey;
-  const industryKey = String(body.industryKey ?? "OTHER") as IndustryKey;
+    const jobKey = String(body.jobKey ?? "OTHER") as JobKey;
+    const industryKey = String(body.industryKey ?? "OTHER") as IndustryKey;
 
-  // ✅ UIが送ってくる tenureYears（LT_6Mなど）を受ける
-  const tenureKey = toTenureKey(String(body.tenureYears ?? ""));
-  const tenureBucketDB = toTenureBucketDB(tenureKey);
+    const tenureKey = toTenureKey(String(body.tenureYears ?? ""));
+    const tenureBucketDB = toTenureBucketDB(tenureKey);
 
-  const prefecture = body.prefecture ? String(body.prefecture) : null;
+    const prefecture = body.prefecture ? String(body.prefecture) : null;
 
-  const mapped = mapJob(jobKey);
-  const professionType = getProfessionType(jobKey);
+    const mapped = mapJob(jobKey);
+    const professionType = getProfessionType(jobKey);
 
-  const range =
-    professionType === "LICENSE_REQUIRED"
-      ? estimateLicenseRequired({ currentIncomeMan, tenureKey, jobKey })
-      : estimateSkillBased({ currentIncomeMan, tenureKey, jobKey, industryKey });
+    const range =
+      professionType === "LICENSE_REQUIRED"
+        ? estimateLicenseRequired({ currentIncomeMan, tenureKey, jobKey })
+        : estimateSkillBased({ currentIncomeMan, tenureKey, jobKey, industryKey });
 
-  const band = toBand(currentIncomeMan, range);
-  const roles = recommendRoles(jobKey);
-  const reasonText = buildReasonText({
-    professionType,
-    band,
-    tenureKey,
-    jobKey,
-    range,
-    currentIncomeMan,
-  });
+    const band = toBand(currentIncomeMan, range);
+    const roles = recommendRoles(jobKey);
+    const reasonText = buildReasonText({
+      professionType,
+      band,
+      tenureKey,
+      jobKey,
+      range,
+      currentIncomeMan,
+    });
 
-  // ✅ DB制約に合わせて “3段階” を保存する
-  const { error: insertError } = await supabaseService.from("diagnoses").insert({
-    age,
-    current_income_man: currentIncomeMan,
-    tenure_bucket: tenureBucketDB,
-    job_category: mapped.job_category,
+    console.log("SUPABASE_URL exists:", !!process.env.NEXT_PUBLIC_SUPABASE_URL);
+    console.log("SUPABASE_URL value:", process.env.NEXT_PUBLIC_SUPABASE_URL);
+    console.log("ANON exists:", !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+    console.log("SERVICE_ROLE exists:", !!process.env.SUPABASE_SERVICE_ROLE_KEY);
 
-    sales_type: mapped.sales_type ?? null,
-    sales_market: mapped.sales_market ?? null,
-    tech_stage: mapped.tech_stage ?? null,
-    prefecture,
+    const { data, error: insertError } = await supabaseService
+      .from("diagnoses")
+      .insert({
+        age,
+        current_income_man: currentIncomeMan,
+        tenure_bucket: tenureBucketDB,
+        job_category: mapped.job_category,
+        sales_type: mapped.sales_type ?? null,
+        sales_market: mapped.sales_market ?? null,
+        tech_stage: mapped.tech_stage ?? null,
+        prefecture,
+        result_band: band,
+        result_min_man: range.min,
+        result_max_man: range.max,
+        reason_text: reasonText,
+        next_roles: roles,
+      })
+      .select();
 
-    result_band: band,
-    result_min_man: range.min,
-    result_max_man: range.max,
-    reason_text: reasonText,
-    next_roles: roles,
-  });
+    console.log("insert data:", data);
 
-  return NextResponse.json({
-    ok: !insertError,
+    if (insertError) {
+      console.error("insertError full:", insertError);
+    }
 
-    professionType,
-    jobKey,
-    industryKey,
-
-    // UI用（5段階）
-    tenureKey,
-    // DB保存（3段階）
-    tenureBucket: tenureBucketDB,
-
-    jobCategory: mapped.job_category,
-    resultBand: band,
-    incomeRangeMan: range,
-    recommendedRoles: roles,
-    reasoning: reasonText,
-
-    saved: !insertError,
-    saveError: insertError?.message ?? null,
-  });
+    return NextResponse.json({
+      ok: !insertError,
+      professionType,
+      jobKey,
+      industryKey,
+      tenureKey,
+      tenureBucket: tenureBucketDB,
+      jobCategory: mapped.job_category,
+      resultBand: band,
+      incomeRangeMan: range,
+      recommendedRoles: roles,
+      reasoning: reasonText,
+      saved: !insertError,
+      saveError: insertError?.message ?? null,
+      saveErrorDetails: insertError ?? null,
+    });
+  } catch (e: any) {
+    console.error("route fatal error:", e);
+    return NextResponse.json(
+      {
+        ok: false,
+        error: e?.message ?? "unknown error",
+      },
+      { status: 500 }
+    );
+  }
 }
