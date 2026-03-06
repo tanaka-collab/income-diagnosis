@@ -271,8 +271,8 @@ const TENURE_OPTIONS: { label: string; value: TenureKey }[] = [
   { label: "5年以上", value: "GE_5Y" },
 ];
 
-const AGE_OPTIONS = Array.from({ length: 43 }, (_, i) => String(18 + i)); // 18〜60
-const INCOME_OPTIONS = Array.from({ length: 81 }, (_, i) => String(200 + i * 10)); // 200〜1000（10万刻み）
+const AGE_OPTIONS = Array.from({ length: 43 }, (_, i) => String(18 + i));
+const INCOME_OPTIONS = Array.from({ length: 81 }, (_, i) => String(200 + i * 10));
 
 function labelJob(jobKey: JobKey) {
   for (const c of JOB_CATEGORIES) {
@@ -281,6 +281,7 @@ function labelJob(jobKey: JobKey) {
   }
   return "その他";
 }
+
 function labelIndustry(ind: IndustryKey) {
   for (const c of INDUSTRY_CATEGORIES) {
     const hit = c.options.find((o) => o.value === ind);
@@ -288,23 +289,22 @@ function labelIndustry(ind: IndustryKey) {
   }
   return "その他";
 }
+
 function labelTenure(t: TenureKey) {
   return TENURE_OPTIONS.find((o) => o.value === t)?.label ?? "";
 }
 
 export default function Home() {
-  // ✅ 毎回「空白スタート」
   const [age, setAge] = useState("");
   const [currentIncomeMan, setCurrentIncomeMan] = useState("");
 
-  // ✅ 大分類 → 小分類
   const [jobCategory, setJobCategory] = useState<JobCategory | "">("");
   const [jobKey, setJobKey] = useState<JobKey | "">("");
 
   const [industryCategory, setIndustryCategory] = useState<IndustryCategory | "">("");
   const [industryKey, setIndustryKey] = useState<IndustryKey | "">("");
 
-  const [tenureKey, setTenureKey] = useState<TenureKey>("Y1_TO_3Y");
+  const [tenureKey, setTenureKey] = useState<TenureKey | "">("");
 
   const [message, setMessage] = useState("");
   const [result, setResult] = useState<any>(null);
@@ -327,7 +327,6 @@ export default function Home() {
       jobKey: jobKey || "OTHER",
       industryKey: industryKey || "OTHER",
       tenureYears: tenureKey || "Y1_TO_3Y",
-      // 互換用（残してOK）
       job: jobKey ? labelJob(jobKey as JobKey) : "",
       industry: industryKey ? labelIndustry(industryKey as IndustryKey) : "",
     };
@@ -338,7 +337,6 @@ export default function Home() {
     setMessage("");
     setResult(null);
 
-    // バリデーション（必須）
     if (!age || !currentIncomeMan || !jobCategory || !jobKey || !industryCategory || !industryKey || !tenureKey) {
       setLoading(false);
       setMessage("すべて選択してください。");
@@ -353,6 +351,7 @@ export default function Home() {
       });
 
       const json = await res.json();
+
       if (!res.ok || json?.ok === false) {
         setMessage("診断エラー：" + (json?.saveError ?? json?.error ?? "不明なエラー"));
       } else {
@@ -369,7 +368,6 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-gradient-to-b from-zinc-50 to-white text-zinc-900">
       <div className="mx-auto max-w-3xl px-4 py-10 space-y-6">
-        {/* ヘッダー */}
         <div className="rounded-2xl border bg-white p-6 shadow-sm">
           <div className="flex items-start justify-between gap-4">
             <div>
@@ -397,7 +395,6 @@ export default function Home() {
           </div>
         </div>
 
-        {/* 入力 */}
         <div className="rounded-2xl border bg-white p-6 shadow-sm space-y-4">
           <h2 className="text-sm font-bold text-zinc-800">入力（全てプルダウン）</h2>
 
@@ -431,7 +428,6 @@ export default function Home() {
             </div>
           </div>
 
-          {/* 職種：大分類 → 小分類 */}
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
               <label className="text-sm font-medium">職種（大分類）</label>
@@ -441,7 +437,7 @@ export default function Home() {
                 onChange={(e) => {
                   const v = e.target.value as JobCategory | "";
                   setJobCategory(v);
-                  setJobKey(""); // 大分類変更時は小分類リセット
+                  setJobKey("");
                 }}
               >
                 <option value="">選択してください</option>
@@ -471,7 +467,6 @@ export default function Home() {
             </div>
           </div>
 
-          {/* 業界：大分類 → 小分類 */}
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
               <label className="text-sm font-medium">業界（大分類）</label>
@@ -481,7 +476,7 @@ export default function Home() {
                 onChange={(e) => {
                   const v = e.target.value as IndustryCategory | "";
                   setIndustryCategory(v);
-                  setIndustryKey(""); // リセット
+                  setIndustryKey("");
                 }}
               >
                 <option value="">選択してください</option>
@@ -511,7 +506,6 @@ export default function Home() {
             </div>
           </div>
 
-          {/* 在籍年数 */}
           <div>
             <label className="text-sm font-medium">在籍年数</label>
             <select
@@ -539,7 +533,6 @@ export default function Home() {
           {message && <p className="text-sm text-red-600">{message}</p>}
         </div>
 
-        {/* 結果 */}
         {result && (
           <div className="rounded-2xl border bg-white p-6 shadow-sm space-y-3">
             <h2 className="text-lg font-bold">診断結果</h2>
@@ -580,7 +573,6 @@ export default function Home() {
           </div>
         )}
 
-        {/* フッター */}
         <footer className="py-8 text-center text-xs text-zinc-400">© UP-STREAM / Income Diagnosis</footer>
       </div>
     </main>
