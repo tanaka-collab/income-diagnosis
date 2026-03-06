@@ -18,18 +18,24 @@ type TenureKey = "LT_6M" | "M6_TO_1Y" | "Y1_TO_3Y" | "Y3_TO_5Y" | "GE_5Y";
 
 // ====== 細分類キー（UI/ロジック用） ======
 type JobKey =
+  // SALES
   | "SALES_NEW"
   | "SALES_ROUTE"
   | "SALES_INSIDE"
   | "SALES_FIELD"
+  // TECH
   | "TECH_HELPDESK"
   | "TECH_DEV"
   | "TECH_INFRA"
+  // SERVICE
   | "SERVICE_RETAIL"
   | "SERVICE_FOOD"
+  // OFFICE
   | "OFFICE_GENERAL"
   | "OFFICE_SALES_ASSIST"
+  // MANUFACTURING
   | "MANUFACTURING_LINE"
+  // MEDICAL
   | "MED_DOCTOR"
   | "MED_NURSE_RN"
   | "MED_ASSISTANT"
@@ -38,8 +44,10 @@ type JobKey =
   | "MED_OT"
   | "MED_RAD"
   | "MED_CLINICAL_TECH"
+  // CARE
   | "CARE_WORKER"
   | "CARE_MANAGER"
+  // PROFESSIONAL
   | "PRO_LAWYER"
   | "PRO_PARALEGAL"
   | "PRO_TAX_ACCOUNTANT"
@@ -47,30 +55,37 @@ type JobKey =
   | "PRO_SOCIAL_INSURANCE"
   | "PRO_JUDICIAL_SCRIVENER"
   | "PRO_ADMIN_SCRIVENER"
+  // BIZ
   | "BIZ_BIZDEV"
   | "BIZ_CORP_PLANNING"
   | "BIZ_PROJECT_MGR"
   | "BIZ_PROD_MGR"
   | "BIZ_STORE_MGR"
+  // HR
   | "HR_RECRUITER"
   | "HR_LABOR"
   | "HR_HRBP"
   | "HR_OD"
+  // MKT
   | "MKT_PERFORMANCE"
   | "MKT_CRM"
   | "MKT_CONTENT_PR"
   | "MKT_BRAND"
+  // FIN
   | "FIN_ACCOUNTING_JUNIOR"
   | "FIN_ACCOUNTING_SENIOR"
   | "FIN_FPNA"
   | "FIN_TREASURY"
+  // CREATIVE
   | "CREATIVE_WEB_DESIGN"
   | "CREATIVE_UIUX"
   | "CREATIVE_VIDEO"
   | "CREATIVE_WRITER"
   | "CREATIVE_DIRECTOR"
+  // LEGAL (in-house)
   | "LEGAL_INHOUSE"
   | "LEGAL_COMPLIANCE"
+  // OTHER
   | "OTHER";
 
 // ✅ 業界（細分）
@@ -135,6 +150,7 @@ function mapJob(jobKey: JobKey): {
   tech_stage?: TechStage | null;
 } {
   switch (jobKey) {
+    // SALES
     case "SALES_NEW":
       return { job_category: "SALES", sales_type: "NEW", sales_market: "B2B" };
     case "SALES_ROUTE":
@@ -148,6 +164,7 @@ function mapJob(jobKey: JobKey): {
     case "SALES_FIELD":
       return { job_category: "SALES", sales_type: "NEW", sales_market: "B2C" };
 
+    // TECH
     case "TECH_HELPDESK":
       return { job_category: "TECH", tech_stage: "OPS" };
     case "TECH_DEV":
@@ -155,14 +172,17 @@ function mapJob(jobKey: JobKey): {
     case "TECH_INFRA":
       return { job_category: "TECH", tech_stage: "OPS" };
 
+    // SERVICE
     case "SERVICE_RETAIL":
     case "SERVICE_FOOD":
       return { job_category: "SERVICE_SALES" };
 
+    // OFFICE
     case "OFFICE_GENERAL":
     case "OFFICE_SALES_ASSIST":
       return { job_category: "OFFICE" };
 
+    // MANUFACTURING
     case "MANUFACTURING_LINE":
       return { job_category: "MANUFACTURING" };
 
@@ -176,9 +196,8 @@ function getProfessionType(jobKey: JobKey): ProfessionType {
     jobKey.startsWith("MED_") ||
     jobKey.startsWith("CARE_") ||
     jobKey.startsWith("PRO_")
-  ) {
+  )
     return "LICENSE_REQUIRED";
-  }
   return "SKILL_BASED";
 }
 
@@ -188,6 +207,7 @@ function judgeTiming(tenureKey: TenureKey): TimingJudge {
   return "OK";
 }
 
+// ====== UIの5段階 tenure を正規化 ======
 function toTenureKey(raw: string): TenureKey {
   const s = String(raw ?? "").trim();
 
@@ -197,10 +217,10 @@ function toTenureKey(raw: string): TenureKey {
     s === "Y1_TO_3Y" ||
     s === "Y3_TO_5Y" ||
     s === "GE_5Y"
-  ) {
+  )
     return s;
-  }
 
+  // 表示文の雑対応
   if (s.includes("半年未満")) return "LT_6M";
   if (s.includes("半年") || s.includes("6")) return "M6_TO_1Y";
   if (s.includes("1〜3") || s.includes("1-3")) return "Y1_TO_3Y";
@@ -216,22 +236,25 @@ function toTenureKey(raw: string): TenureKey {
   return "GE_5Y";
 }
 
+// ✅ DBに保存する3段階へマッピング（制約回避）
 function toTenureBucketDB(key: TenureKey): TenureBucketDB {
   if (key === "LT_6M" || key === "M6_TO_1Y") return "LT_1Y";
   if (key === "Y1_TO_3Y") return "Y1_TO_3Y";
-  return "GE_3Y";
+  return "GE_3Y"; // Y3_TO_5Y / GE_5Y
 }
 
 // =========================
 // 最低賃金ベース年収（暫定）
 // =========================
+// 年間労働時間ざっくり：8h × 20日 × 12ヶ月
 const ANNUAL_HOURS = 1920;
-const MIN_WAGE_JP = 1000;
-
+// 全国平均の最低ライン（あとで都道府県別に拡張可）
+const MIN_WAGE_JP = 1000; // 円
 function minWageIncomeMan(): number {
-  return Math.floor((MIN_WAGE_JP * ANNUAL_HOURS) / 10000);
+  return Math.floor((MIN_WAGE_JP * ANNUAL_HOURS) / 10000); // 万円
 }
 
+// ✅ 業界補正（軽め）
 function industryFineBumpMan(industryKey: IndustryKey): number {
   switch (industryKey) {
     case "IT_SAAS_B2B":
@@ -258,8 +281,9 @@ function industryFineBumpMan(industryKey: IndustryKey): number {
   }
 }
 
+// ✅ 次アクション（3行）
 function nextActions3Lines(args: { tenureKey: TenureKey; jobKey: JobKey }): string {
-  const { jobKey } = args;
+  const { tenureKey, jobKey } = args;
 
   if (jobKey.startsWith("SALES")) {
     return [
@@ -316,29 +340,28 @@ function estimateSkillBased(args: {
 }): { min: number; max: number } {
   const { currentIncomeMan, tenureKey, jobKey, industryKey } = args;
 
+  // 🟥 半年未満：最低賃金
   if (tenureKey === "LT_6M") {
     const base = minWageIncomeMan();
     return { min: base, max: base + 30 };
   }
 
+  // 🟧 半年〜1年：最低賃金＋α（でも相場未満）
   if (tenureKey === "M6_TO_1Y") {
-    const base = minWageIncomeMan() + 40;
-    const min = Math.max(base, currentIncomeMan - 20);
+    const base = minWageIncomeMan() + 40; // ちょい上
+    const min = Math.max(base, currentIncomeMan - 20); // “ちょい下がる”感も残す
     return { min, max: min + 50 };
   }
 
-  let base = jobKey.startsWith("TECH")
-    ? 340
-    : jobKey.startsWith("SALES")
-      ? 320
-      : jobKey.startsWith("OFFICE")
-        ? 280
-        : jobKey.startsWith("SERVICE")
-          ? 300
-          : jobKey.startsWith("MANUFACTURING")
-            ? 290
-            : 300;
+  // 🟩 1年以上：通常ロジック
+  let base =
+    jobKey.startsWith("TECH") ? 340 :
+    jobKey.startsWith("SALES") ? 320 :
+    jobKey.startsWith("OFFICE") ? 280 :
+    jobKey.startsWith("SERVICE") ? 300 :
+    jobKey.startsWith("MANUFACTURING") ? 290 : 300;
 
+  // 職種ベース補正（追加職種の土台）
   if (jobKey.startsWith("HR_")) base = 330;
   if (jobKey.startsWith("MKT_")) base = 340;
   if (jobKey.startsWith("FIN_")) base = 340;
@@ -346,6 +369,7 @@ function estimateSkillBased(args: {
   if (jobKey.startsWith("BIZ_")) base = 380;
   if (jobKey.startsWith("CREATIVE_")) base = 320;
 
+  // jobKey細補正
   let jobFine = 0;
   if (jobKey === "SALES_NEW") jobFine += 20;
   if (jobKey === "SALES_INSIDE") jobFine += 10;
@@ -355,11 +379,8 @@ function estimateSkillBased(args: {
   if (jobKey === "FIN_ACCOUNTING_SENIOR") jobFine += 10;
   if (jobKey === "BIZ_PROD_MGR") jobFine += 20;
 
-  const tenureBump =
-    tenureKey === "Y1_TO_3Y" ? 0 :
-    tenureKey === "Y3_TO_5Y" ? 40 :
-    tenureKey === "GE_5Y" ? 80 :
-    0;
+  // 在籍補正（あなたのルール）
+  const tenureBump = tenureKey === "Y1_TO_3Y" ? 0 : tenureKey === "Y3_TO_5Y" ? 40 : tenureKey === "GE_5Y" ? 80 : 0;
 
   const industryFine = industryFineBumpMan(industryKey);
 
@@ -399,12 +420,14 @@ function estimateLicenseRequired(args: {
     case "MED_CLINICAL_TECH":
       base = 430;
       break;
+
     case "CARE_WORKER":
       base = 320;
       break;
     case "CARE_MANAGER":
       base = 420;
       break;
+
     case "PRO_LAWYER":
       base = 750;
       break;
@@ -430,6 +453,7 @@ function estimateLicenseRequired(args: {
       base = 400;
   }
 
+  // 在籍補正（資格職は控えめに反映）
   const bump = tenureKey === "Y3_TO_5Y" ? 40 : tenureKey === "GE_5Y" ? 80 : 0;
 
   const floor = Math.max(base + bump, currentIncomeMan);
@@ -466,6 +490,7 @@ function buildReasonText(args: {
   const actions = nextActions3Lines({ tenureKey, jobKey });
   const gapToMin = Math.max(0, range.min - currentIncomeMan);
 
+  // ====== 短期向け：文章を分ける ======
   if (professionType === "SKILL_BASED" && tenureKey === "LT_6M") {
     return `
 【転職タイミング判定：${timingLabel(timing)}】
@@ -502,6 +527,7 @@ ${actions}
 `.trim();
   }
 
+  // ====== 資格職 ======
   if (professionType === "LICENSE_REQUIRED") {
     if (band === "HIGH") {
       return `
@@ -538,6 +564,7 @@ ${actions}
 `.trim();
   }
 
+  // ====== 通常（1年以上） ======
   if (band === "HIGH") {
     return `
 【転職タイミング判定：${timingLabel(timing)}】
@@ -584,6 +611,7 @@ ${actions}
 `.trim();
   }
 
+  // LOW
   if (jobKey === "OFFICE_GENERAL") {
     return `
 【転職タイミング判定：${timingLabel(timing)}】
@@ -623,6 +651,7 @@ function recommendRoles(jobKey: JobKey): string[] {
       return ["インフラ運用", "SRE補助", "クラウド運用"];
     case "TECH_DEV":
       return ["開発（実装）", "QA/テスター→開発", "フロントエンド"];
+
     case "HR_RECRUITER":
       return ["採用（中途）", "RPO", "人事企画（補助）"];
     case "MKT_PERFORMANCE":
@@ -635,110 +664,84 @@ function recommendRoles(jobKey: JobKey): string[] {
       return ["Webデザイナー", "UI/UX（補助）", "制作ディレクション"];
     case "LEGAL_INHOUSE":
       return ["法務", "契約管理", "コンプライアンス"];
+
     default:
       return ["カスタマーサポート", "コールセンター（受電）", "インサイドセールス"];
   }
 }
 
 export async function POST(req: Request) {
-  try {
-    console.log("diagnose route called");
-    console.log("env check", {
-      NEXT_PUBLIC_SUPABASE_URL: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-      SUPABASE_SERVICE_ROLE_KEY: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
-    });
+  const body = await req.json();
 
-    const body = await req.json();
-    console.log("request body", body);
+  const age = Number(body.age);
+  const currentIncomeMan = Number(body.currentIncomeMan);
 
-    const age = Number(body.age);
-    const currentIncomeMan = Number(body.currentIncomeMan);
+  const jobKey = String(body.jobKey ?? "OTHER") as JobKey;
+  const industryKey = String(body.industryKey ?? "OTHER") as IndustryKey;
 
-    const jobKey = String(body.jobKey ?? "OTHER") as JobKey;
-    const industryKey = String(body.industryKey ?? "OTHER") as IndustryKey;
+  // ✅ UIが送ってくる tenureYears（LT_6Mなど）を受ける
+  const tenureKey = toTenureKey(String(body.tenureYears ?? ""));
+  const tenureBucketDB = toTenureBucketDB(tenureKey);
 
-    const tenureKey = toTenureKey(String(body.tenureYears ?? ""));
-    const tenureBucketDB = toTenureBucketDB(tenureKey);
+  const prefecture = body.prefecture ? String(body.prefecture) : null;
 
-    const prefecture = body.prefecture ? String(body.prefecture) : null;
+  const mapped = mapJob(jobKey);
+  const professionType = getProfessionType(jobKey);
 
-    const mapped = mapJob(jobKey);
-    const professionType = getProfessionType(jobKey);
+  const range =
+    professionType === "LICENSE_REQUIRED"
+      ? estimateLicenseRequired({ currentIncomeMan, tenureKey, jobKey })
+      : estimateSkillBased({ currentIncomeMan, tenureKey, jobKey, industryKey });
 
-    const range =
-      professionType === "LICENSE_REQUIRED"
-        ? estimateLicenseRequired({ currentIncomeMan, tenureKey, jobKey })
-        : estimateSkillBased({ currentIncomeMan, tenureKey, jobKey, industryKey });
+  const band = toBand(currentIncomeMan, range);
+  const roles = recommendRoles(jobKey);
+  const reasonText = buildReasonText({
+    professionType,
+    band,
+    tenureKey,
+    jobKey,
+    range,
+    currentIncomeMan,
+  });
 
-    const band = toBand(currentIncomeMan, range);
-    const roles = recommendRoles(jobKey);
-    const reasonText = buildReasonText({
-      professionType,
-      band,
-      tenureKey,
-      jobKey,
-      range,
-      currentIncomeMan,
-    });
+  // ✅ DB制約に合わせて “3段階” を保存する
+  const { error: insertError } = await supabaseService.from("diagnoses").insert({
+    age,
+    current_income_man: currentIncomeMan,
+    tenure_bucket: tenureBucketDB,
+    job_category: mapped.job_category,
 
-    console.log("before supabase insert", {
-      age,
-      currentIncomeMan,
-      tenureBucketDB,
-      jobCategory: mapped.job_category,
-      resultBand: band,
-      resultMin: range.min,
-      resultMax: range.max,
-    });
+    sales_type: mapped.sales_type ?? null,
+    sales_market: mapped.sales_market ?? null,
+    tech_stage: mapped.tech_stage ?? null,
+    prefecture,
 
-    const { error: insertError } = await supabaseService.from("diagnoses").insert({
-      age,
-      current_income_man: currentIncomeMan,
-      tenure_bucket: tenureBucketDB,
-      job_category: mapped.job_category,
-      sales_type: mapped.sales_type ?? null,
-      sales_market: mapped.sales_market ?? null,
-      tech_stage: mapped.tech_stage ?? null,
-      prefecture,
-      result_band: band,
-      result_min_man: range.min,
-      result_max_man: range.max,
-      reason_text: reasonText,
-      next_roles: roles,
-    });
+    result_band: band,
+    result_min_man: range.min,
+    result_max_man: range.max,
+    reason_text: reasonText,
+    next_roles: roles,
+  });
 
-    if (insertError) {
-      console.error("supabase insert error", insertError);
-    } else {
-      console.log("supabase insert success");
-    }
+  return NextResponse.json({
+    ok: !insertError,
 
-    return NextResponse.json({
-      ok: !insertError,
-      professionType,
-      jobKey,
-      industryKey,
-      tenureKey,
-      tenureBucket: tenureBucketDB,
-      jobCategory: mapped.job_category,
-      resultBand: band,
-      incomeRangeMan: range,
-      recommendedRoles: roles,
-      reasoning: reasonText,
-      saved: !insertError,
-      saveError: insertError?.message ?? null,
-      error: insertError?.message ?? null,
-    });
-  } catch (e: any) {
-    console.error("diagnose route exception", e);
+    professionType,
+    jobKey,
+    industryKey,
 
-    return NextResponse.json(
-      {
-        ok: false,
-        error: e?.message ?? String(e) ?? "unknown error",
-      },
-      { status: 500 }
-    );
-  }
+    // UI用（5段階）
+    tenureKey,
+    // DB保存（3段階）
+    tenureBucket: tenureBucketDB,
+
+    jobCategory: mapped.job_category,
+    resultBand: band,
+    incomeRangeMan: range,
+    recommendedRoles: roles,
+    reasoning: reasonText,
+
+    saved: !insertError,
+    saveError: insertError?.message ?? null,
+  });
 }
