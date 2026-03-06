@@ -304,7 +304,7 @@ export default function Home() {
   const [industryCategory, setIndustryCategory] = useState<IndustryCategory | "">("");
   const [industryKey, setIndustryKey] = useState<IndustryKey | "">("");
 
-  const [tenureKey, setTenureKey] = useState<TenureKey | "">("");
+  const [tenureKey, setTenureKey] = useState<TenureKey>("Y1_TO_3Y");
 
   const [message, setMessage] = useState("");
   const [result, setResult] = useState<any>(null);
