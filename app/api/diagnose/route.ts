@@ -339,8 +339,8 @@ function industryFineBumpMan(industryKey: IndustryKey): number {
 }
 
 // ✅ 次アクション（3行）
-function nextActions3Lines(args: { tenureKey: TenureKey; jobKey: JobKey }): string {
-  const { tenureKey, jobKey } = args;
+function nextActions3Lines(args: { jobKey: JobKey }): string {
+  const { jobKey } = args;
 
   if (jobKey.startsWith("SALES")) {
     return [
@@ -544,7 +544,7 @@ function buildReasonText(args: {
   const { professionType, band, tenureKey, jobKey, range, currentIncomeMan } = args;
 
   const timing = judgeTiming(tenureKey);
-  const actions = nextActions3Lines({ tenureKey, jobKey });
+  const actions = nextActions3Lines({ jobKey });
   const gapToMin = Math.max(0, range.min - currentIncomeMan);
 
   // ====== 短期向け：文章を分ける ======
@@ -807,12 +807,12 @@ export async function POST(req: Request) {
       saveError: insertError?.message ?? null,
       saveErrorDetails: insertError ?? null,
     });
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error("route fatal error:", e);
     return NextResponse.json(
       {
         ok: false,
-        error: e?.message ?? "unknown error",
+        error: e instanceof Error ? e.message : "unknown error",
       },
       { status: 500 }
     );
