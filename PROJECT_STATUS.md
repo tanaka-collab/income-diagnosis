@@ -13,6 +13,7 @@
 - PR #1は `app/page.tsx` と `app/api/diagnose/route.ts` の型付け改善と未使用引数削除を含む。
 - PR本文はlint、TypeScript、buildの成功を記録している。今回GitHub上で取得できたcommit statusはVercel成功1件で、PRレビュー投稿は見当たらなかった。
 - PR取得時点のGitHub情報は `mergeable=true` / `mergeable_state=clean`。Draftのためレビューとマージ判断は未了。
+- 現状レビューを記録したDraft PR #6: https://github.com/tanaka-collab/income-diagnosis/pull/6
 
 ## ソースから確認した構成
 - Next.js 16 / React 19 / TypeScript / Supabase構成。
@@ -26,8 +27,7 @@
 - PR #1のレビューとマージ判断は未了。
 
 ## 受け渡しの状態
-- `HANDOFF-20261118-001` のレビュー・記録作業を `codex/handoff-20261118-001` で実施中。
+- `HANDOFF-20261118-001` のレビュー・記録作業を完了し、`codex/handoff-20261118-001` からDraft PR #6を作成。
 - `CODEX_LATEST.md` に調査結果、確認範囲、未確認事項を記録。
 - `HANDOFF_TASK.md` は指示に従い変更していない。
 - アプリコード変更、mainへの変更・マージ、本番操作はなし。
-- Draft PRは作業ブランチから作成予定。
