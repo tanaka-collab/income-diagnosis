@@ -27,12 +27,16 @@ jobs:
         id: check
         shell: bash
         run: |
-          if grep -Eq '^- 状態: `READY`[[:space:]]*
+          if grep -Eq '^- 状態: `READY`[[:space:]]*$' HANDOFF_TASK.md \
+            && grep -Eq '^- 作業の目的: .+' HANDOFF_TASK.md \
+            && ! grep -Eq '^- 作業の目的: 未指定[[:space:]]*$' HANDOFF_TASK.md \
+            && grep -Eq '^- 受け入れ基準: .+' HANDOFF_TASK.md \
+            && ! grep -Eq '^- 受け入れ基準: 未指定[[:space:]]*$' HANDOFF_TASK.md; then
             echo "ready=true" >> "$GITHUB_OUTPUT"
             echo "READY: approved task was found."
           else
             echo "ready=false" >> "$GITHUB_OUTPUT"
-            echo "IDLE: no Codex job will run."
+            echo "IDLE or incomplete task: no Codex job will run."
           fi
 
   codex:
