@@ -1,29 +1,30 @@
-# ChatGPT → Codex 受け渡し指示
+# ChatGPT → Codex 指示書
 
-- 状態: `IDLE`
+- 状態: `READY`
 - 更新日: 2026-11-18 (JST)
 - 対象リポジトリ: `tanaka-collab/income-diagnosis`
-- 次のタスクID: 未採番
-- 作業の目的: 未指定
-- 具体的な実装依頼: なし
-- 受け入れ基準: 未指定
+- タスクID: `INCOME-AUTOPILOT-V31-20261118-01`
+- 実行承認: 2026-11-18、責任者から依頼されたChappy × Codex Autopilotの完成検証の一環。SurfaceのローカルCodex CLIで実行し、Codex Cloudの手動起動は不要。
+- 目的: `tanaka-collab/income-diagnosis` でGitHubの指示検知 → Codexによる実装 → 独立レビュー → Draft PR自動作成までを安全に検証する。
+- 作業ブランチ: Windows Autopilotが作る `autopilot/task-*` のみ。指示の正本は `autopilot-control` ブランチのこのファイル。
 
-## 前回タスクの結果
-- 完了済み: `HANDOFF-20261118-001`
-- Codex実施: リポジトリ・既存PR #1の状況レビュー、作業報告更新
-- 確認済み: ChatGPTがGitHubから報告とPR差分を直接取得
-- 報告PR: https://github.com/tanaka-collab/income-diagnosis/pull/6 （mainへマージ済み）
-- アプリ本体の変更: なし
-- 本番操作: なし
+## 実装すること
 
-## 次回の使い方
-1. ChatGPTがユーザーの新しい依頼に沿ってこのファイルを更新し、タスクID・目的・完了条件・制約を記載する。
-2. Codex Cloudを利用枠内で手動起動し、`AGENTS.md` とこのファイルを読み取らせる。
-3. Codexが作業ブランチに結果を保存し、GitHubでDraft PRを作成する。
-4. ChatGPTがPRと `CODEX_LATEST.md` を確認して報告する。
+1. 次の **新規Markdownファイル1件のみ** 作成する。既存ファイルは変更しない。
+   - ファイルパス: `docs/AUTOPILOT_INCOME_DIAGNOSIS_SMOKE.md`
+2. このファイルにUTF-8で以下をすべて記載する。
+   - 見出し: `# income-diagnosis Autopilot 動作確認`
+   - タスクID: `INCOME-AUTOPILOT-V31-20261118-01`
+   - 一文: `これはChatGPTからの指示をSurfaceのCodex CLIが自動処理することを検証するための無害な文書です。`
+   - 一文: `アプリ本体、既存設定、依存ライブラリ、本番環境には変更を加えません。`
+3. 文書を読み戻し、見出し、タスクID、指定の2文が含まれることを実際に検証する。
+4. 実装担当Codexは変更ファイルがこの文書1件だけであることを確認し、行ったテストだけを報告する。
 
-## 運用の制限
-- `IDLE` 中は作業依頼なし。Codexが独断で過去のタスクを再実行しない。
-- GitHubを通じた引き継ぎは可能だが、Codexの起動とChatGPTへの再確認依頼は自動化されていない。
-- OpenAI API経由の追加課金型自動実行、追加クレジットの購入は行わない。
-- PRマージ・本番反映・外部送信・機密情報の公開は、責任者が許可するまで行わない。
+## 受け入れ条件と安全制約
+
+- Codex CLIは文書を作成・検証するだけ。コミット、push、PR作成、デプロイ、外部メッセージ送信は禁止。
+- Windows監視プログラムが独立の読み取り専用レビューで `VERDICT: PASS` を確認した後のみ、`CODEX_LATEST.md` を更新し、`main` 宛のDraft PRを作成する。アプリケーションのテストスイートはMarkdownだけの変更なら必須ではない。
+- PRのファイル差分は新規文書とAutopilotが更新する `CODEX_LATEST.md` の計2件だけとする。
+- `main` に直接コミットせず、PRマージや本番デプロイも行わない。新規API課金、認証情報や個人情報の取得・記録は行わない。
+- リポジトリの `AGENTS.md` や既存の `HANDOFF_TASK.md` に「Codex Cloudの手動起動」と書かれている場合、その説明は旧ワークフローを指す。今回の明示承認済みローカルCLIテストには適用しない。それ以外の安全規則は守る。
+- 安全に実行できない場合は、変更を破棄せず、監視プログラムに安全停止と障害記録を任せる。レビューを省略してPRを出さない。
