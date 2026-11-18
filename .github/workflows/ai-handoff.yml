@@ -71,7 +71,7 @@ jobs:
         shell: bash
         run: |
           git add -A
-          if git diff --cached --name-only | grep -Eq '^(\.github/workflows/|AGENTS\.md$|\.env($|\.)|.*\.pem$|.*\.key$)'; then
+          if git diff --cached --name-only | grep -Eq '^(\.github/workflows/|AGENTS\.md$|HANDOFF_TASK\.md$|\.env($|\.)|.*\.pem$|.*\.key$)'; then
             echo "::error::Forbidden or sensitive path touched. Refusing to publish."
             exit 1
           fi
