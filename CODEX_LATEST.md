@@ -22,7 +22,7 @@
 
 ## コミット
 
-- この報告を指定ブランチへ反映したコミット: GitHub反映後にSHAを確認して追記する。
+- 報告内容を最初に指定ブランチへ反映したコミット: [d093e26096f38a359c81d8c5e50e30374ba994ed](https://github.com/tanaka-collab/income-diagnosis/commit/d093e26096f38a359c81d8c5e50e30374ba994ed)
 
 ## 未解決事項
 
