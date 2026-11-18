@@ -1,14 +1,21 @@
 # ChatGPT → Codex 指示書
 
-- 状態: `READY`
+- 状態: `IDLE`
 - 更新日: 2026-11-18 (JST)
 - 対象リポジトリ: `tanaka-collab/income-diagnosis`
 - タスクID: `INCOME-AUTOPILOT-V31-20261118-01`
 - 実行承認: 2026-11-18、責任者から依頼されたChappy × Codex Autopilotの完成検証の一環。SurfaceのローカルCodex CLIで実行し、Codex Cloudの手動起動は不要。
 - 目的: `tanaka-collab/income-diagnosis` でGitHubの指示検知 → Codexによる実装 → 独立レビュー → Draft PR自動作成までを安全に検証する。
+- 完了状況: 2026-11-18に無人実行・独立レビューPASS・Draft PR作成を検証済み（https://github.com/tanaka-collab/income-diagnosis/pull/8）。新しい明示指示まで再実行しない。
 - 作業ブランチ: Windows Autopilotが作る `autopilot/task-*` のみ。指示の正本は `autopilot-control` ブランチのこのファイル。
 
-## 実装すること
+## 完了記録（再実行禁止）
+
+- 完了: `INCOME-AUTOPILOT-V31-20261118-01`
+- 作業PR: https://github.com/tanaka-collab/income-diagnosis/pull/8
+- Draft / Open / 未マージ、独立レビュー PASS。変更はテスト文書と `CODEX_LATEST.md` の2件のみ。
+
+## 実装内容（完了済み、再実行禁止）
 
 1. 次の **新規Markdownファイル1件のみ** 作成する。既存ファイルは変更しない。
    - ファイルパス: `docs/AUTOPILOT_INCOME_DIAGNOSIS_SMOKE.md`
