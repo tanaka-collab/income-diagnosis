@@ -13,7 +13,7 @@
 - PR #1は `app/page.tsx` と `app/api/diagnose/route.ts` の型付け改善と未使用引数削除を含む。
 - PR本文はlint、TypeScript、buildの成功を記録している。今回GitHub上で取得できたcommit statusはVercel成功1件で、PRレビュー投稿は見当たらなかった。
 - PR取得時点のGitHub情報は `mergeable=true` / `mergeable_state=clean`。Draftのためレビューとマージ判断は未了。
-- 現状レビューを記録したDraft PR #6: https://github.com/tanaka-collab/income-diagnosis/pull/6
+- 現状レビューを記録したPR #6は2026-11-18にmainへマージ済み: https://github.com/tanaka-collab/income-diagnosis/pull/6
 
 ## ソースから確認した構成
 - Next.js 16 / React 19 / TypeScript / Supabase構成。
@@ -27,7 +27,13 @@
 - PR #1のレビューとマージ判断は未了。
 
 ## 受け渡しの状態
-- `HANDOFF-20261118-001` のレビュー・記録作業を完了し、`codex/handoff-20261118-001` からDraft PR #6を作成。
+- `HANDOFF-20261118-001` のレビュー・記録作業とChatGPT側の確認を完了し、PR #6をmainへマージ済み。
 - `CODEX_LATEST.md` に調査結果、確認範囲、未確認事項を記録。
-- `HANDOFF_TASK.md` は指示に従い変更していない。
-- アプリコード変更、mainへの変更・マージ、本番操作はなし。
+- Codexは `HANDOFF_TASK.md` を変更せず、ChatGPT側で作業終了後に `IDLE` に戻した。
+- アプリコード変更・本番操作はなし。mainへの変更は文書とタスク状態のみ。
+
+## 無料運用の完成判定（2026-11-18）
+- GitHub内の指示・作業報告・進捗ファイルで、ChatGPT ↔ Codex Cloud の往復を実際に確認済み。
+- Codex Cloudの起動は手動。ChatGPTへの自動通知・両AI間の完全自動実行は対象外。
+- 課金型Codex GitHub Actionsワークフローは撤去済み。OpenAI APIキーの設定・請求状況をこのリポジトリから検証したものではない。
+- 次の仕事が来るまで HANDOFF_TASK.md は IDLE。
