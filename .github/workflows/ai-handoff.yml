@@ -1,0 +1,121 @@
+name: Controlled AI handoff to Codex
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - HANDOFF_TASK.md
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ai-handoff-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    outputs:
+      ready: ${{ steps.check.outputs.ready }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Check task state
+        id: check
+        shell: bash
+        run: |
+          if grep -Eq '^- 状態: `READY`[[:space:]]*$' HANDOFF_TASK.md; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+            echo "READY: approved task was found."
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "IDLE: no Codex job will run."
+          fi
+
+  codex:
+    needs: gate
+    if: needs.gate.outputs.ready == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: read
+    steps:
+      - name: Verify API credential before any chargeable run
+        shell: bash
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          if [ -z "$OPENAI_API_KEY" ]; then
+            echo "::error::OPENAI_API_KEY is not configured. Codex was NOT started. See AI_HANDOFF_SETUP.md."
+            exit 1
+          fi
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Run Codex on the approved handoff task
+        uses: openai/codex-action@v1
+        with:
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          permission-profile: ":workspace"
+          prompt-file: .github/codex/handoff-prompt.md
+          output-file: /tmp/codex-handoff-result.md
+      - name: Package reviewed-scope patch
+        shell: bash
+        run: |
+          git add -A
+          if git diff --cached --name-only | grep -Eq '^(\.github/workflows/|AGENTS\.md$|\.env($|\.)|.*\.pem$|.*\.key$)'; then
+            echo "::error::Forbidden or sensitive path touched. Refusing to publish."
+            exit 1
+          fi
+          if git diff --cached --quiet; then
+            echo "::error::Codex produced no report or changes."
+            exit 1
+          fi
+          git diff --cached --binary > "$RUNNER_TEMP/ai-handoff.patch"
+          if [ "$(wc -c < "$RUNNER_TEMP/ai-handoff.patch")" -gt 1048576 ]; then
+            echo "::error::Patch larger than 1 MiB. Refusing to publish."
+            exit 1
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ai-handoff-patch
+          path: ${{ runner.temp }}/ai-handoff.patch
+          retention-days: 1
+
+  propose:
+    needs: codex
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/download-artifact@v4
+        with:
+          name: ai-handoff-patch
+          path: ${{ runner.temp }}
+      - name: Apply Codex changes for review
+        shell: bash
+        run: |
+          git apply --check --binary "$RUNNER_TEMP/ai-handoff.patch"
+          git apply --binary "$RUNNER_TEMP/ai-handoff.patch"
+      - name: Open draft PR (never auto-merge)
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: codex/handoff-${{ github.run_id }}
+          base: main
+          title: "Codex: AI handoff run #${{ github.run_number }}"
+          body: |
+            Generated from an explicitly READY HANDOFF_TASK.md on main.
+            Review all changes, test results, and CODEX_LATEST.md before any merge.
+            This workflow does not deploy or merge automatically.
+          commit-message: "codex: proposed changes from approved handoff task"
+          draft: true
