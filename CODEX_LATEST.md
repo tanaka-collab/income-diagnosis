@@ -1,32 +1,60 @@
-# Codex → ChatGPT 最新作業報告
+# Codex → ChatGPT latest Autopilot task report
 
-- 報告状態: `COMPLETED`
-- 更新日: 2026-11-18 (JST)
-- タスク: `HANDOFF-20261118-001` — 年収診断プロジェクトの現状レビュー
-- 対象リポジトリ: `tanaka-collab/income-diagnosis`
-- 参照した main: `bdc3bcfced90bfaafc4b55a68fd2168b89fc3205`
-- 作業ブランチ: `codex/handoff-20261118-001`
-- Draft PR: [#6](https://github.com/tanaka-collab/income-diagnosis/pull/6)
+- Repository: `tanaka-collab/income-diagnosis`
+- Task ID: `AUTOPILOT-V2-INCOME-E2E-20261120-01`
+- Runner task hash: `526b811f706fc4e0f5d5d6a1bf17a20f0602ce24fda585df723222679d41d976`
+- Runner branch: `autopilot/task-526b811f706f`
+- Existing Draft PR: [#9](https://github.com/tanaka-collab/income-diagnosis/pull/9)
+- Initial Draft PR HEAD: `d7aff6e3dd75f83d1e04f05e24e02e67ca85e335`
+- Independent **Codex** reviewer: **PASS** on the third attempt (2026-11-20 17:38 JST); the first two review attempts failed or were blocked
+- Separate **ChatGPT** GitHub reviewer: **BLOCKED** on the initial HEAD due to contradictory historical/final wording; a new-HEAD review is required after this report update
+- Runner-managed changes on the PR: `docs/AUTOPILOT_V2_INCOME_GITHUB_E2E_20261120.md`, `CODEX_LATEST.md` only
+- No application source code modified; no merge or intentional production release
 
-## 実施・確認内容
+## Verified chronology — 2026-11-20 JST
 
-- `AGENTS.md`、`HANDOFF_TASK.md`、`PROJECT_STATUS.md` をGitHub上で読み、タスク範囲と制限を確認した。`HANDOFF_TASK.md` は変更していない。
-- PR #1「Fix income diagnosis lint errors」は未マージのDraftで、1コミット・2ファイル（`app/page.tsx`、`app/api/diagnose/route.ts`）を変更している。内容は診断結果/エラーの型付けと未使用引数の削除。
-- PR #1 の説明欄は lint、TypeScript、build の成功を記録している。今回取得したGitHub statusはVercelの成功1件で、PRレビュー投稿は見当たらなかった。PRは確認時点で `mergeable=true` / `mergeable_state=clean` だが、Draftのままである。
-- mainのソース構成はNext.js 16 / React 19 / TypeScript / Supabase。画面は年齢・現在年収・職種・業界・在籍年数を受け取り、`/api/diagnose` が診断結果を計算してSupabaseの `diagnoses` に保存する構成。
-- `package.json` には `lint` と `build` のスクリプトがあり、`test` スクリプトはない。確認したmainのファイル一覧ではテストファイルも見つからなかった。
-- ソース上、診断APIはSupabase URL、保存結果、保存エラー詳細をサーバーログへ出力する。これはコードから分かる確認事項であり、実環境のログ・値・アクセス制御を調査したものではない。
-- 報告ファイルだけを含むDraft PR #6をmain向けに作成した。mainとの差分は `CODEX_LATEST.md` と `PROJECT_STATUS.md` の2ファイル。
+| Time | Stage | Result |
+|---|---|---|
+| 16:55 | Actual GitHub READY intake by the Surface Windows runner | PASS |
+| 17:01 | Codex documentation implementation, exit code 0 | PASS |
+| Before 17:38 | First two independent-review attempts, including missing evidence and restricted app-server access | FAIL/BLOCKED (historical) |
+| 17:38 | Third dedicated independent read-only Codex review | PASS |
+| 17:38–17:39 | Runner pushed new isolated branch and created Draft PR #9 | PASS |
+| 17:39 | Separate GitHub/ChatGPT review on original HEAD | BLOCKED, documentation mismatch |
+| After 18:00 | Reconcile both PR files using actual chronology and received runner report | GitHub-side correction; new-HEAD review required |
 
-## 未確認・次の対応
+## Intake evidence
 
-- Supabase環境変数の設定値、DB接続、本番動作、ログの保存先・閲覧権限は未確認。
-- PR #1 のlint / TypeScript / buildはPR本文の記録であり、この実行では再実行していない。実行環境への依存関係インストールやネットワークを使うテストは、タスク制限に従い行っていない。
-- PR #1 のレビューとマージ判断は未了。マージは行わず、所有者の判断に委ねる。
+- Control-branch commit: `a0c5bf2c613c0732d0f9db524c13a258b92b14e3`
+- `HANDOFF_TASK.md` blob SHA: `906479a361fc0ca23b55589c07feaa30061f24e5`
+- Task file SHA-256: `526b811f706fc4e0f5d5d6a1bf17a20f0602ce24fda585df723222679d41d976`
+- Original Windows startup record: `2026-11-20T07:55:06` UTC (16:55:06 JST), `autopilot.log` line 839
+- Windows `state.json`, branch name `autopilot/task-526b811f706f`, Git reflog and isolated worktree corroborated the task hash.
 
-## 変更・操作
+These Windows facts were validated and reported by the local Work session. This GitHub review cannot directly examine the private D: logs, so the evidence is attributed accordingly.
 
-- 更新ファイル: `CODEX_LATEST.md`、`PROJECT_STATUS.md` のみ。
-- アプリソース、`HANDOFF_TASK.md` の変更: なし。
-- テスト・ビルド: 未実施。
-- mainへの書き込み・マージ、本番操作: なし。
+## Interpretation of the review history
+
+The implementation agent originally reported a blocked attempt, including `failed to initialize in-process app-server client: Access is denied (os error 5)`. That is a genuine **earlier** result. The runner then continued under the existing safety gate and a later dedicated reviewer returned PASS on the third review round. Only then did the runner create Draft PR #9. Therefore the early blocked language is historical, not the final state of the runner's Codex review or the PR.
+
+The subsequent ChatGPT GitHub review is a **different** check. It marked the initial PR HEAD BLOCKED because the old files did not distinguish intermediate failures from final results. This report and the companion document now distinguish those states. A fresh review must inspect the new published SHA; the earlier BLOCKED result is not overwritten or misrepresented.
+
+## Unverified / outstanding
+
+- No proof in this task that the Windows Sandbox/Core environment has been fully repaired.
+- No verified automatic delivery into the original Work chat. Reading the PR and this report from GitHub is the established fallback.
+- Project-scoped pause/resume passed isolated tests but was not installed into the already-running Windows PID 11072 by this PR.
+- Same Codex thread was resumed in a synthetic cross-process test only; actual live turn and Local/Cloud shared thread are not proven.
+- 24-hour durability, freshness and safe restart/recovery require separate verification.
+- Existing Vercel Git integration may create a **preview** on PR-branch updates. The user authorized this side effect on 2026-11-20. No production merge or promotion was requested.
+
+## Change scope
+
+This task's PR changes only this file and `docs/AUTOPILOT_V2_INCOME_GITHUB_E2E_20261120.md`. The original local correction commit prepared by the Surface Work session was not directly accessible to the ChatGPT GitHub connector; these clarifications were written against the published GitHub PR based on its contents and the supplied verified Work report.
+
+## CI/review race observed after the documentation correction
+
+- At HEAD `5b8e1b827d8609b233fb9c57cf4b3fb0c3da887d`, the event-driven ChatGPT reviewer ran while the Vercel status was still `pending` and posted `BLOCKED` **solely because the check had not completed yet**. This did not identify a new document defect.
+- The Vercel status for **that exact SHA** subsequently became `success`, checked with GitHub's combined commit status. The original earlier `BLOCKED` review remains as an audit record pinned to its SHA.
+- The active Autopilot PR-event reviewer instructions were updated on 2026-11-20 to distinguish an asynchronous `pending` check from a failed check, preserve exact-SHA deduplication and review documentation-only PRs with their CI state explicitly qualified.
+- This additional reporting change produces a new GitHub HEAD for a separate event-driven review. Its CI state and actual verdict must be measured on that **new** SHA, never copied from this earlier one.
