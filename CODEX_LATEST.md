@@ -51,3 +51,10 @@ The subsequent ChatGPT GitHub review is a **different** check. It marked the ini
 ## Change scope
 
 This task's PR changes only this file and `docs/AUTOPILOT_V2_INCOME_GITHUB_E2E_20261120.md`. The original local correction commit prepared by the Surface Work session was not directly accessible to the ChatGPT GitHub connector; these clarifications were written against the published GitHub PR based on its contents and the supplied verified Work report.
+
+## CI/review race observed after the documentation correction
+
+- At HEAD `5b8e1b827d8609b233fb9c57cf4b3fb0c3da887d`, the event-driven ChatGPT reviewer ran while the Vercel status was still `pending` and posted `BLOCKED` **solely because the check had not completed yet**. This did not identify a new document defect.
+- The Vercel status for **that exact SHA** subsequently became `success`, checked with GitHub's combined commit status. The original earlier `BLOCKED` review remains as an audit record pinned to its SHA.
+- The active Autopilot PR-event reviewer instructions were updated on 2026-11-20 to distinguish an asynchronous `pending` check from a failed check, preserve exact-SHA deduplication and review documentation-only PRs with their CI state explicitly qualified.
+- This additional reporting change produces a new GitHub HEAD for a separate event-driven review. Its CI state and actual verdict must be measured on that **new** SHA, never copied from this earlier one.
