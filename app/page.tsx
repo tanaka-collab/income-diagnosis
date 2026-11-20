@@ -294,6 +294,12 @@ function labelTenure(t: TenureKey) {
   return TENURE_OPTIONS.find((o) => o.value === t)?.label ?? "";
 }
 
+type DiagnosisResult = {
+  incomeRangeMan?: { min: number; max: number };
+  reasoning?: string;
+  recommendedRoles?: string[];
+};
+
 export default function Home() {
   const [age, setAge] = useState("");
   const [currentIncomeMan, setCurrentIncomeMan] = useState("");
@@ -307,7 +313,7 @@ export default function Home() {
   const [tenureKey, setTenureKey] = useState<TenureKey | "">("");
 
   const [message, setMessage] = useState("");
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<DiagnosisResult | null>(null);
   const [loading, setLoading] = useState(false);
 
   const jobSubOptions = useMemo(() => {
@@ -350,7 +356,11 @@ export default function Home() {
         body: JSON.stringify(payload),
       });
 
-      const json = await res.json();
+      const json = (await res.json()) as DiagnosisResult & {
+        ok?: boolean;
+        saveError?: string | null;
+        error?: string;
+      };
 
       if (!res.ok || json?.ok === false) {
         setMessage("診断エラー：" + (json?.saveError ?? json?.error ?? "不明なエラー"));
@@ -358,8 +368,8 @@ export default function Home() {
         setResult(json);
         setMessage("");
       }
-    } catch (e: any) {
-      setMessage("通信エラー：" + (e?.message ?? "不明なエラー"));
+    } catch (e: unknown) {
+      setMessage("通信エラー：" + (e instanceof Error ? e.message : "不明なエラー"));
     } finally {
       setLoading(false);
     }
